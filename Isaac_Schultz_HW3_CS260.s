@@ -218,7 +218,7 @@ DisplayOutput:
 DisplayOutputContinue:
 	
 	# Print the start of the start of the result message
-		la $a0, $a2
+		move $a0, $a2
 		li $v0, PRINT_STR_SERV
 		syscall
 	
