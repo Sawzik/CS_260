@@ -57,7 +57,6 @@ main:
 	sa Vector2, 8($sp)				# Saving the address of vector2 on the stack.
 	sw $t1, 12($sp)					# Saving the size of Vector2 on the stack.
 	
-	
 	jal DotProduct					# Calls the DotProduct function
 	move $t0, $v0					# Stores whether the arrays are equal size $t0
 	
@@ -74,24 +73,23 @@ DisplayOutput1:
 		li $v0, PRINT_STR_SERV
 		syscall
 	
-	bnq $v1, 0, V1NotPerpendidular	# If the dot product is not 0
+	bnq $v1, 0, VectorNotPerpendidular	# If the dot product is not 0
 	
 	# if the vectors are perpendicular, print that they are perpendicular
 		la $a0, Perpendicular
 		li $v0, PRINT_STR_SERV
 		syscall
 
-V1NotPerpendidular:
+	b FunctionCall2 				# Branches to the next part of the program
+
+VectorNotPerpendidular:
 
 	# if the vectors are not perpendicular, print that they are not perpendicular
 		la $a0, NotPerpendicular
 		li $v0, PRINT_STR_SERV
 		syscall
 		
-	b FunctionCall2 				# Branches to the next part of the program
-
-
-MainContinue:		
+FunctionCall2:
 
 	# Display NewLine
 		la $a0, NL
