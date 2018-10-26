@@ -19,6 +19,7 @@ Vector3:					.word 5, 15, 5
 ArrayNotEqual:				.asciiz "Vectors are not the same size\n"
 V1AndV2Result:				.asciiz "Vector 1 and vector 2 are "
 V1AndV3Result:				.asciiz "Vector 1 and vector 3 are "
+V2AndV3Result:				.asciiz "Vector 2 and vector 3 are "
 Perpendicular:				.asciiz "perpendicular\n"
 NotPerpendicular:			.asciiz "not perpendicular\n"
 
@@ -47,11 +48,12 @@ main:
 
 	
 	# Preparing the stack for the DotProduct function calls
-	# We are going to load all the arguments for two function calls in one go
+	#	We are going to load all the arguments for two function calls in one go because the functions being called
+	#	make use of the registers where the number of elements in each array are stored.
 
-	addi $sp, $sp, -32					# Allocating 8 words on the stack
+	addi $sp, $sp, -16					# Allocating 4 words on the stack
 
-	# Loading the arguments for the second function call on to the stack first because the stack runs from the bottom up.
+	# Loading the arguments for the third function call on to the stack first because the stack runs from the bottom up.
 		la $t3, Vector2					# Saving the address of vector2 on the stack.
 		sw $t3, 0($sp)					#	Uses $t3 temporarily to copy the address.
 
@@ -62,18 +64,33 @@ main:
 
 		sw $t2, 12($sp)					# Saving the size of Vector3 on the stack.
 
+	addi $sp, $sp, -16					# Allocating 4 words on the stack
+
+	# Loading the arguments for the second function call on to the stack first because the stack runs from the bottom up.
+		la $t3, Vector1					# Saving the address of vector1 on the stack.
+		sw $t3, 0($sp)					#	Uses $t3 temporarily to copy the address.
+
+		sw $t0, 4($sp)					# Saving the size of Vector1 on the stack.
+
+		la $t3, Vector3					# Saving the address of vector3 on the stack.
+		sw $t3, 8($sp)					#	Uses $t3 temporarily to copy the address.
+
+		sw $t2, 12($sp)					# Saving the size of Vector3 on the stack.
+
+	addi $sp, $sp, -16					# Allocating 4 words on the stack
+
 	# Loading the arguments for the first function call on to the stack.
 		la $t3, Vector1					# Saving the address of vector1 on the stack.
-		sw $t3, 16($sp)					#	Uses $t43temporarily to copy the address.
+		sw $t3, 0($sp)					#	Uses $t43temporarily to copy the address.
 
-		sw $t0, 20($sp)					# Saving the size of Vector1 on the stack.
+		sw $t0, 4($sp)					# Saving the size of Vector1 on the stack.
 
 		la $t3, Vector2					# Saving the address of vector2 on the stack.
-		sw $t3, 24($sp)					#	Uses $t3 temporarily to copy the address.
+		sw $t3, 8($sp)					#	Uses $t3 temporarily to copy the address.
 
-		sw $t1, 28($sp)					# Saving the size of Vector2 on the stack.
+		sw $t1, 12($sp)					# Saving the size of Vector2 on the stack.
 
-	#addi $sp, $sp, 16					# Restoring the stack pointer
+
 
 	# Calling the first DotProduct function and dealing with output.
 
@@ -100,6 +117,23 @@ main:
 			la $a2, V1AndV3Result		# Loads the address of the prompt to output in $a2
 			jal DisplayOutput			# Calls DisplayOutput function
 
+
+	# Preparing the stack for the next function call.
+		addi $sp, $sp, 16				# Pops 4 bytes off the stack
+
+
+	# Calling the third DotProduct function and dealing with output.
+
+		jal DotProduct					# Calls the DotProduct function
+
+		# Preparing arguments for DisplayOutput function.
+			move $a0, $v0				# Stores whether the arrays are equal size $a0
+			move $a1, $v1				# Stores the dot product in $a1
+			la $a2, V2AndV3Result		# Loads the address of the prompt to output in $a2
+			jal DisplayOutput			# Calls DisplayOutput function
+
+	# Resotring the stack back to the the address
+		addi $sp, $sp, 16				# Pops 4 bytes off the stack
 
 	# Display NewLine
 		la $a0, NL
@@ -202,9 +236,9 @@ End:
 # Uses  registers: $t0
 DisplayOutput:
 
-	move $t0, $a0								# Saves the boolean if the vectors are equal into $t0
+	move $t0, $a0								# Saves the boolean of if the vectors are equal to $t0
 	
-	# We dont need to save $a1 because no part of the subroutine makes changes to it.
+	# We dont need to save $a1 or $a2 because no part of the subroutine makes changes to them.
 
 	beq $t0, 1, DisplayOutputContinue		# If Vectors are the same size, branch to DisplayOutputContinue
 	
@@ -234,7 +268,7 @@ DisplayOutputContinue:
 VectorPerpendidular:
 
 	# if the vectors are perpendicular, print that they are perpendicular
-		la $a0, NotPerpendicular
+		la $a0, Perpendicular
 		li $v0, PRINT_STR_SERV
 		syscall
 
