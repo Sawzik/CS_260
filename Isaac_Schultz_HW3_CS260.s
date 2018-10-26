@@ -80,10 +80,6 @@ main:
 	move $t0, $v0					# Stores whether the arrays are equal size $t0
 	
 
-
-		
-FunctionCall2:
-
 	# Display NewLine
 		la $a0, NL
 		li $v0, PRINT_CHAR_SERV
@@ -95,36 +91,51 @@ FunctionCall2:
 		
 .end main
 
+
+
+# Function that informs the user about a Dot Product of two vectors.
+# Arguments:	$a0		Boolean value if the vectors are the same size.
+#							0 Means vectors are not same size.
+#							1 Means vectors are the same size.
+#				$a1		Integer result of the dot product between two vectors.
+#							will be 0 if they are perpendicular
+#
+# Returns:		N/A
+# Uses  registers: $t0
 DisplayOutput:
 
-	beq $t0, 1, DisplayOutput1		# If Vectors are the same size, branch to DisplayOutput1
+	lw $t0, $a0								# Saves the boolean if the vectors are equal into $t0
+	
+	# We dont need to save $a1 because no part of the subroutine makes changes to it.
+
+	beq $t0, 1, DisplayOutputContinue		# If Vectors are the same size, branch to DisplayOutput1
 	
 	# If Vectors are not the same size
 		# Tells the user that the arrays are not the same size
 			la $a0, ArrayNotEqual
 			li $v0, PRINT_STR_SERV
 			syscall		
-		b FunctionCall2				# Branches to the next part of the program				
+		b EndDisplayOutput					# Ends the subroutine			
 	
-DisplayOutput1:
+DisplayOutputContinue:
 	
-	# Print the start of the start of the result
+	# Print the start of the start of the result message
 		la $a0, V1AndV2Result
 		li $v0, PRINT_STR_SERV
 		syscall
 	
-	bnq $v1, 0, VectorNotPerpendidular	# If the dot product is not 0
+	beq $a1, 0, VectorPerpendidular		# If the dot product is not 0, branch to VectorPerpendidular
 	
-	# if the vectors are perpendicular, print that they are perpendicular
-		la $a0, Perpendicular
+	# if the vectors are not perpendicular, print that they are not perpendicular
+		la $a0, NotPerpendicular
 		li $v0, PRINT_STR_SERV
 		syscall
 
-	b FunctionCall2 				# Branches to the next part of the program
+	b EndDisplayOutput 						# Ends the subroutine
 
-VectorNotPerpendidular:
+VectorPerpendidular:
 
-	# if the vectors are not perpendicular, print that they are not perpendicular
+	# if the vectors are perpendicular, print that they are perpendicular
 		la $a0, NotPerpendicular
 		li $v0, PRINT_STR_SERV
 		syscall
