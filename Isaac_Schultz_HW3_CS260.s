@@ -25,31 +25,31 @@ NotPerpendicular:			.asciiz "not perpendicular\n"
         .text        
 main:
 
-	la $t0, Vector1				# Loading addresses of our data into registers $t0-$t3
+	la $t0, Vector1						# Loading addresses of our data into registers $t0-$t3
 	la $t1, Vector2
 	la $t2, Vector3
 	la $t3, ArrayNotEqual
 	
-	sub $t0, $t1, $t0				# Subtracts the address of Vector2 from the address of Vector1.
-									# $t0 is now the size of Vector1 in bytes
-	srl $t0, $t0, 2					# Divides the size of Vector1 by 4 by shifting bits to the right by 2
-									# $t0 is now the size of Vector 1 in words
+	sub $t0, $t1, $t0					# Subtracts the address of Vector2 from the address of Vector1.
+										# $t0 is now the size of Vector1 in bytes
+	srl $t0, $t0, 2						# Divides the size of Vector1 by 4 by shifting bits to the right by 2
+										# $t0 is now the size of Vector 1 in words
 
-	sub $t1, $t2, $t1				# Subtracts the address of Vector3 from the address of Vector2.
-									# $t1 is now the size of Vector2 in bytes
-	srl $t1, $t1, 2					# Divides the size of Vector2 by 4 by shifting bits to the right by 2
-									# $t1 is now the size of Vector 2 in words
+	sub $t1, $t2, $t1					# Subtracts the address of Vector3 from the address of Vector2.
+										# $t1 is now the size of Vector2 in bytes
+	srl $t1, $t1, 2						# Divides the size of Vector2 by 4 by shifting bits to the right by 2
+										# $t1 is now the size of Vector 2 in words
 	
-	sub $t2, $t3, $t2				# Subtracts the address of ArrayNotEqual from the address of Vector3.
-									# $t2 is now the size of Vector3 in bytes
-	srl $t2, $t2, 2					# Divides the size of Vector1 by 4 by shifting bits to the right by 2
-									# $t2 is now the size of Vector 1 in words							
+	sub $t2, $t3, $t2					# Subtracts the address of ArrayNotEqual from the address of Vector3.
+										# $t2 is now the size of Vector3 in bytes
+	srl $t2, $t2, 2						# Divides the size of Vector1 by 4 by shifting bits to the right by 2
+										# $t2 is now the size of Vector 1 in words							
 
 	
 	# Preparing the stack for the DotProduct function calls
 	# We are going to load all the arguments for two function calls in one go
 
-	addi $sp, $sp, -32				# Allocating 8 words on the stack
+	addi $sp, $sp, -32					# Allocating 8 words on the stack
 
 	# Loading the arguments for the second function call on to the stack first because the stack runs from the bottom up.
 		la $t4, Vector2					# Saving the address of vector2 on the stack.
@@ -73,12 +73,30 @@ main:
 
 		sw $t1, 28($sp)					# Saving the size of Vector2 on the stack.
 
-	# Calling the DotProduct function and dealing with output.
+
+	# Calling the first DotProduct function and dealing with output.
+
+		jal DotProduct					# Calls the DotProduct function
+
+		# Preparing arguments for DisplayOutput function.
+			move $a0, $v0				# Stores whether the arrays are equal size $a0
+			move $a1, $v1				# Stores whether the arrays are equal size $a0
+			jal DisplayOutput			# Calls DisplayOutput function
 
 
-	jal DotProduct					# Calls the DotProduct function
-	move $t0, $v0					# Stores whether the arrays are equal size $t0
-	
+	# Preparing the stack for the next function call.
+		addi $sp, $sp, 16				# Pops 4 bytes off the stack
+
+
+	# Calling the second DotProduct function and dealing with output.
+
+		jal DotProduct					# Calls the DotProduct function
+
+		# Preparing arguments for DisplayOutput function.
+			move $a0, $v0				# Stores whether the arrays are equal size $a0
+			move $a1, $v1				# Stores whether the arrays are equal size $a0
+			jal DisplayOutput			# Calls DisplayOutput function
+
 
 	# Display NewLine
 		la $a0, NL
@@ -108,7 +126,7 @@ DisplayOutput:
 	
 	# We dont need to save $a1 because no part of the subroutine makes changes to it.
 
-	beq $t0, 1, DisplayOutputContinue		# If Vectors are the same size, branch to DisplayOutput1
+	beq $t0, 1, DisplayOutputContinue		# If Vectors are the same size, branch to DisplayOutputContinue
 	
 	# If Vectors are not the same size
 		# Tells the user that the arrays are not the same size
@@ -147,6 +165,7 @@ EndDisplayOutput:
 .end DisplayOutput
 
   
+
 # Function that calculates the dot Product of two arrays.
 # Arguments:	Address of the first array.					(at $sp + 0)	or	0($sp)
 #				Number of elements in first array.			(at $sp + 4)	or	4($sp)
@@ -217,8 +236,3 @@ End:
 	addi $sp, $sp, 16			# Resetting the stack back to what it was at the beginning
 	jr $ra						# Jump back to the return address
 .end DotProduct
-	
-        
-
-
-
