@@ -44,26 +44,66 @@ main:
 									# $t2 is now the size of Vector3 in bytes
 	srl $t2, $t2, 2					# Divides the size of Vector1 by 4 by shifting bits to the right by 2
 									# $t2 is now the size of Vector 1 in words							
+
 	
-	# Using the stack to save the values stored in registers that will be used by a subroutine.
-	addi $sp, $sp, -8				# Allocating 2 words on the stack
-	sw $t1, 0($sp)					# Saves the size of Vector2 on the stack.
-	sw $t2, 4($sp)					# Saves the size of Vector3 on the stack.
-	
-	# Preparing the stack for the DotProduct function call
-	addi $sp, $sp, -16				# Allocating 4 words on the stack
-	sa Vector1, 0($sp)				# Saving the address of vector1 on the stack.
-	sw $t0, 4($sp)					# Saving the size of Vector1 on the stack.
-	sa Vector2, 8($sp)				# Saving the address of vector2 on the stack.
-	sw $t1, 12($sp)					# Saving the size of Vector2 on the stack.
-	
+	# Preparing the stack for the DotProduct function calls
+	# We are going to load all the arguments for two function calls in one go
+
+	addi $sp, $sp, -32				# Allocating 8 words on the stack
+
+	# Loading the arguments for the second function call on to the stack first because the stack runs from the bottom up.
+		la $t4, Vector2					# Saving the address of vector2 on the stack.
+		sw $t4, 0($sp)					#	Uses $t4 temporarily to copy the address.
+
+		sw $t1, 4($sp)					# Saving the size of Vector2 on the stack.
+
+		la $t4, Vector3					# Saving the address of vector3 on the stack.
+		sw $t4, 8($sp)					#	Uses $t4 temporarily to copy the address.
+
+		sw $t2, 12($sp)					# Saving the size of Vector3 on the stack.
+
+	# Loading the arguments for the first function call on to the stack.
+		la $t4, Vector1					# Saving the address of vector1 on the stack.
+		sw $t4, 16($sp)					#	Uses $t4 temporarily to copy the address.
+
+		sw $t0, 20($sp)					# Saving the size of Vector1 on the stack.
+
+		la $t4, Vector2					# Saving the address of vector2 on the stack.
+		sw $t4, 24($sp)					#	Uses $t4 temporarily to copy the address.
+
+		sw $t1, 28($sp)					# Saving the size of Vector2 on the stack.
+
+	# Calling the DotProduct function and dealing with output.
+
+
 	jal DotProduct					# Calls the DotProduct function
 	move $t0, $v0					# Stores whether the arrays are equal size $t0
 	
+
+
+		
+FunctionCall2:
+
+	# Display NewLine
+		la $a0, NL
+		li $v0, PRINT_CHAR_SERV
+		syscall	
+		
+	# End program
+		li $v0, TERMINATE_SERV
+		syscall
+		
+.end main
+
+DisplayOutput:
+
 	beq $t0, 1, DisplayOutput1		# If Vectors are the same size, branch to DisplayOutput1
 	
 	# If Vectors are not the same size
-		jal PromptArrayNotEqual		# Tells the user that the arrays are not the same size
+		# Tells the user that the arrays are not the same size
+			la $a0, ArrayNotEqual
+			li $v0, PRINT_STR_SERV
+			syscall		
 		b FunctionCall2				# Branches to the next part of the program				
 	
 DisplayOutput1:
@@ -88,31 +128,12 @@ VectorNotPerpendidular:
 		la $a0, NotPerpendicular
 		li $v0, PRINT_STR_SERV
 		syscall
-		
-FunctionCall2:
 
-	# Display NewLine
-		la $a0, NL
-		li $v0, PRINT_CHAR_SERV
-		syscall	
-		
-	# End program
-		li $v0, TERMINATE_SERV
-		syscall
-		
-.end main
-
-
-PromptArrayNotEqual:
-
-	# Display message
-		la $a0, ArrayNotEqual
-		li $v0, PRINT_STR_SERV
-		syscall
+EndDisplayOutput:
 	
 	jr $ra 				# Jump back to main program
 
-.end PromptArrayNotEqual
+.end DisplayOutput
 
   
 # Function that calculates the dot Product of two arrays.
