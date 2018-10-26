@@ -52,27 +52,28 @@ main:
 	addi $sp, $sp, -32					# Allocating 8 words on the stack
 
 	# Loading the arguments for the second function call on to the stack first because the stack runs from the bottom up.
-		la $t4, Vector2					# Saving the address of vector2 on the stack.
-		sw $t4, 0($sp)					#	Uses $t4 temporarily to copy the address.
+		la $t3, Vector2					# Saving the address of vector2 on the stack.
+		sw $t3, 0($sp)					#	Uses $t3 temporarily to copy the address.
 
 		sw $t1, 4($sp)					# Saving the size of Vector2 on the stack.
 
-		la $t4, Vector3					# Saving the address of vector3 on the stack.
-		sw $t4, 8($sp)					#	Uses $t4 temporarily to copy the address.
+		la $t3, Vector3					# Saving the address of vector3 on the stack.
+		sw $t3, 8($sp)					#	Uses $t3 temporarily to copy the address.
 
 		sw $t2, 12($sp)					# Saving the size of Vector3 on the stack.
 
 	# Loading the arguments for the first function call on to the stack.
-		la $t4, Vector1					# Saving the address of vector1 on the stack.
-		sw $t4, 16($sp)					#	Uses $t4 temporarily to copy the address.
+		la $t3, Vector1					# Saving the address of vector1 on the stack.
+		sw $t3, 16($sp)					#	Uses $t43temporarily to copy the address.
 
 		sw $t0, 20($sp)					# Saving the size of Vector1 on the stack.
 
-		la $t4, Vector2					# Saving the address of vector2 on the stack.
-		sw $t4, 24($sp)					#	Uses $t4 temporarily to copy the address.
+		la $t3, Vector2					# Saving the address of vector2 on the stack.
+		sw $t3, 24($sp)					#	Uses $t3 temporarily to copy the address.
 
 		sw $t1, 28($sp)					# Saving the size of Vector2 on the stack.
 
+	#addi $sp, $sp, 16					# Restoring the stack pointer
 
 	# Calling the first DotProduct function and dealing with output.
 
@@ -122,7 +123,7 @@ main:
 # Uses  registers: $t0
 DisplayOutput:
 
-	lw $t0, $a0								# Saves the boolean if the vectors are equal into $t0
+	move $t0, $a0								# Saves the boolean if the vectors are equal into $t0
 	
 	# We dont need to save $a1 because no part of the subroutine makes changes to it.
 
@@ -180,7 +181,7 @@ EndDisplayOutput:
 # Uses  registers: $t0-$t4
 DotProduct:
 
-	addi $sp, $sp, -16			# Set the stack pointer back to the start of the arguments for the subroutine.
+	#addi $sp, $sp, -16			# Set the stack pointer back to the start of the arguments for the subroutine.
 	
 	lw $t0, 4($sp)				# Initialize $t0 to the number of elements in the first array.
 								# Number of elements in the first array is stored in 4($sp).
@@ -203,11 +204,12 @@ Continue:
 
 	li $t0, 0 					# Initialize the loop counter
 	
-	lw $t1, 4($sp)				# Initialize the size of both arrays.
+	lw $t1, 0($sp)				# Initialize the address of the first array.
+
+	lw $t2, 4($sp)				# Initialize the size of both arrays.
 								# 	We know both arrays are equal because we branched here from the conditional
 								#	statement checking if they were the same size.
 
-	lw $t2, 0($sp)				# Initialize the address of the first array.
 	lw $t3, 12($sp)				# Initialize the address of the second array.
 	
 	li $v1, 0					# Initialize the Dot Product Total
@@ -216,16 +218,16 @@ Continue:
 	
 Loop:
 	
-	beq $t0, $t1, End			# End condition for the loop.
+	beq $t0, $t2, End			# End condition for the loop.
 									#	When the loop counter equals the number of elements in the arrays
 
-	lw $t5, 0($t2)				# Copying the dereferenced values of the element of the arrays.
+	lw $t5, 0($t1)				# Copying the dereferenced values of the element of the arrays.
 	lw $t6, 0($t3)
 		
 	mul $t4, $t5, $t6			# multiplies the current element of each array.
 	
 	add $v1, $v1, $t4			# Increases the total by the product of the current two elements.
-	addi $t2, $t2, 4				# Increment the first array pointer by 1 word.
+	addi $t1, $t1, 4				# Increment the first array pointer by 1 word.
 	addi $t3, $t3, 4				# Increment the second array pointer by 1 word.
 
 	addi $t0, $t0, 1			# Increment the loop counter
@@ -233,6 +235,6 @@ Loop:
 		
 End:
 	
-	addi $sp, $sp, 16			# Resetting the stack back to what it was at the beginning
+	#addi $sp, $sp, 16			# Resetting the stack back to what it was at the beginning
 	jr $ra						# Jump back to the return address
 .end DotProduct
