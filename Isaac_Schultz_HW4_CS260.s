@@ -21,16 +21,15 @@ TriangleAreaPrompt:				.asciiz "Triangle area: "
 
         .text        
 main:
-	la $t0, Triangle
+
+	la $t0, Triangle					# Loading all the sidelengths into registers
 	l.s $f0, 0($t0)
 	l.s $f1, 4($t0)
 	l.s $f2, 8($t0)
-	
-	# Preparing the stack
 
 	addi $sp, $sp, -12					# Allocating 12 bytes on the stack
 
-		s.s $f0, 0($sp)
+		s.s $f0, 0($sp)					# Loading sidelengths on to stack
 		s.s $f1, 4($sp)
 		s.s $f2, 8($sp)
 
@@ -38,18 +37,18 @@ main:
 										#	$f0 is now the semiPerimeter.
 										
 	addi $sp, $sp, -4					# Allocating 4 more bytes on the stack
+
+	# We need to reload the data on to the stack as it will be out of order after the size change
 	
-	la $t0, Triangle
+	la $t0, Triangle					# Re loading sidelengths into registers
 	l.s $f1, 0($t0)
 	l.s $f2, 4($t0)
 	l.s $f3, 8($t0)
 	
-	# Preparing the stack
-
-		s.s $f1, 0($sp)					# Saves the sidelengths to the stack
-		s.s $f2, 4($sp)
-		s.s $f3, 8($sp)
-		s.s $f0, 12($sp)				# Saves the semiperimeter to the stack
+	s.s $f1, 0($sp)						# Saves the sidelengths to the stack
+	s.s $f2, 4($sp)
+	s.s $f3, 8($sp)
+	s.s $f0, 12($sp)					# Saves the semiperimeter to the stack
 		
 	jal isTriangle						# Calls the isTriangle function
 										#	$v0 is now a bool representing the triangle.
