@@ -13,88 +13,26 @@ TERMINATE_SERV  = 10
 PRINT_CHAR_SERV = 11
 
         .data  
-Vector1:					.word 2, 6, 2
-Vector2:					.word 4, -3, 5
-Vector3:					.word 5, 15, 5
-ArrayNotEqual:				.asciiz "Vectors are not the same size\n"
-V1AndV2Result:				.asciiz "Vector 1 and vector 2 are "
-V1AndV3Result:				.asciiz "Vector 1 and vector 3 are "
-V2AndV3Result:				.asciiz "Vector 2 and vector 3 are "
-Perpendicular:				.asciiz "perpendicular\n"
-NotPerpendicular:			.asciiz "not perpendicular\n"
+Triangle:						.float 2, 6, 2
+NotTrianglePrompt:				.asciiz "Not a triangle.\n"
+TriangleAreaPrompt:				.asciiz "Triangle area: "
 
         .text        
 main:
 
-	la $t0, Vector1						# Loading addresses of our data into registers $t0-$t3
-	la $t1, Vector2
-	la $t2, Vector3
-	la $t3, ArrayNotEqual
-	
-	sub $t0, $t1, $t0					# Subtracts the address of Vector2 from the address of Vector1.
-										# $t0 is now the size of Vector1 in bytes
-	srl $t0, $t0, 2						# Divides the size of Vector1 by 4 by shifting bits to the right by 2
-										# $t0 is now the size of Vector 1 in words
+	l.s $f0, 0(Triangle)
+	l.s $f1, 4(Triangle)
+	l.s $f2, 8(Triangle)
 
-	sub $t1, $t2, $t1					# Subtracts the address of Vector3 from the address of Vector2.
-										# $t1 is now the size of Vector2 in bytes
-	srl $t1, $t1, 2						# Divides the size of Vector2 by 4 by shifting bits to the right by 2
-										# $t1 is now the size of Vector 2 in words
-	
-	sub $t2, $t3, $t2					# Subtracts the address of ArrayNotEqual from the address of Vector3.
-										# $t2 is now the size of Vector3 in bytes
-	srl $t2, $t2, 2						# Divides the size of Vector1 by 4 by shifting bits to the right by 2
-										# $t2 is now the size of Vector 1 in words							
+	# Preparing the stack for the calls
 
-	
-	# Preparing the stack for the DotProduct function calls
-	#	We are going to load all the arguments for two function calls in one go because the functions being called
-	#	make use of the registers where the number of elements in each array are stored.
+	addi $sp, $sp, -12					# Allocating 12 bytes on the stack
 
-	addi $sp, $sp, -16					# Allocating 4 words on the stack
+		sw $f0, 0($sp)
+		sw $f1, 4($sp)
+		sw $f2, 8($sp)
 
-	# Loading the arguments for the third function call on to the stack first because the stack runs from the bottom up.
-		la $t3, Vector2					# Saving the address of vector2 on the stack.
-		sw $t3, 0($sp)					#	Uses $t3 temporarily to copy the address.
-
-		sw $t1, 4($sp)					# Saving the size of Vector2 on the stack.
-
-		la $t3, Vector3					# Saving the address of vector3 on the stack.
-		sw $t3, 8($sp)					#	Uses $t3 temporarily to copy the address.
-
-		sw $t2, 12($sp)					# Saving the size of Vector3 on the stack.
-
-	addi $sp, $sp, -16					# Allocating 4 words on the stack
-
-	# Loading the arguments for the second function call on to the stack first because the stack runs from the bottom up.
-		la $t3, Vector1					# Saving the address of vector1 on the stack.
-		sw $t3, 0($sp)					#	Uses $t3 temporarily to copy the address.
-
-		sw $t0, 4($sp)					# Saving the size of Vector1 on the stack.
-
-		la $t3, Vector3					# Saving the address of vector3 on the stack.
-		sw $t3, 8($sp)					#	Uses $t3 temporarily to copy the address.
-
-		sw $t2, 12($sp)					# Saving the size of Vector3 on the stack.
-
-	addi $sp, $sp, -16					# Allocating 4 words on the stack
-
-	# Loading the arguments for the first function call on to the stack.
-		la $t3, Vector1					# Saving the address of vector1 on the stack.
-		sw $t3, 0($sp)					#	Uses $t43temporarily to copy the address.
-
-		sw $t0, 4($sp)					# Saving the size of Vector1 on the stack.
-
-		la $t3, Vector2					# Saving the address of vector2 on the stack.
-		sw $t3, 8($sp)					#	Uses $t3 temporarily to copy the address.
-
-		sw $t1, 12($sp)					# Saving the size of Vector2 on the stack.
-
-
-
-	# Calling the first DotProduct function and dealing with output.
-
-		jal DotProduct					# Calls the DotProduct function
+	jal semiPerimeter					# Calls the DotProduct function
 
 		# Preparing arguments for DisplayOutput function.
 			move $a0, $v0				# Stores whether the arrays are equal size $a0
@@ -161,7 +99,7 @@ main:
 #				The Dot Product of the two arrays.			in $v1
 #
 # Uses  registers: $t0-$t4
-DotProduct:
+semiPerimeter:
 
 	#addi $sp, $sp, -16			# Set the stack pointer back to the start of the arguments for the subroutine.
 	
