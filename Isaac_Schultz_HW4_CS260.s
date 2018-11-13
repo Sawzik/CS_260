@@ -1,4 +1,4 @@
-# Homework 3
+# Homework 4
 # Isaac Schultz
 
 # Constants
@@ -15,7 +15,7 @@ PRINT_CHAR_SERV = 11
 
         .data  
 Two:							.float 2.0
-Triangle:						.float 10.0, 10.0, 10.0
+Triangle:						.float 150.0, 100.0, 190.0
 NotTrianglePrompt:				.asciiz "Not a triangle.\n"
 TriangleAreaPrompt:				.asciiz "Triangle area: "
 
@@ -43,7 +43,7 @@ main:
 	jal isTriangle						# Calls the isTriangle function
 										#	$v0 is now a bool representing the triangle.
 										
-	beq $v0, 0, ReturnNotTriangle		# If the sides are not capable of being a triangle.
+	beq $v0, 0, ReturnNotTriangle		# If the sides cannot be a triangle.
 	
 	# else
 	
@@ -86,7 +86,7 @@ EndProgram:
 
 
 
-# Function that Semiperimiter of a triangle.
+# Function that calculates the semiperimiter of a triangle.
 # Arguments:	Length of side a					(at $sp + 0)	or	0($sp)
 #				Length of side b					(at $sp + 4)	or	4($sp)
 #				Length of side c					(at $sp + 8)	or	8($sp)
@@ -122,18 +122,19 @@ semiPerimeter:
 #					returns 0 if it is not a triangle.
 #					returns 1 if it is a triangle.
 #
-# Uses  registers: $f0, $f1, $t0
+# Uses  registers: $f0-$f1, $t0-$t1
 isTriangle:
 	
 	li $t0, 0					# Initializing loop counter to 0
-	move $t1, $sp				# Saves the address of the stack pointer so that it can be iterated on.
-	addi $t1, 4					# adds 4 bytes to the pointer so its pointing to sidelengths.
-	l.s $f0, 0($sp)				# ssaves the semiPerimeter in $f0
+	move $t1, $sp				# Saves the address of the stack pointer
+								#	so it can be iterated separate from $sp
+	addi $t1, 4					# set $t1 to point to first sidelength.
+	l.s $f0, 0($sp)				# saves the semiPerimeter in $f0
 	
 Loop:
 	
-	beq $t0, 3, WasATriangle	# End condition for the loop. When the loop counter reaches 3
-								#	Should only happen if all the sides were less than the semiperimiter
+	beq $t0, 3, WasATriangle	# End condition for the loop. Should only happen if 
+								#	all the sides were less than the semiperimiter.
 
 	l.s $f1, ($t1)				# Load the float on the bottom of the stack
 	c.le.s $f0, $f1		 		# End the loop if one of the sides is >= semiperimiter
@@ -159,7 +160,8 @@ End:
 
 
 
-# Function that determines the area of a triangle using the length of each side and the semiPerimeter.
+# Function that determines the area of a triangle using its sidelengths 
+# and the pre-calculated semiPerimeter.
 # Arguments:	SemiPerimiter						(at $ap + 0)	or	0($sp)
 #				Length of side a					(at $sp + 4)	or	4($sp)
 #				Length of side b					(at $sp + 8)	or	8($sp)
@@ -170,25 +172,26 @@ End:
 # Uses  registers: $f0-$f3
 triangleArea:
 	
-	l.s $f0, 0($sp)				# saves the semiPerimeter in $f0
+	l.s $f0, 0($sp)			# saves the semiPerimeter in $f0
 	
-	l.s $f1, 4($sp)				# Load the float on the bottom of the stack
-	sub.s $f1, $f0, $f1			# Subtract the sidelength from the semiperimeter and save in $f1
+	l.s $f1, 4($sp)			# Load the float on the bottom of the stack
+	sub.s $f1, $f0, $f1		# $f1 = semiperimeter - side a
 	
-	l.s $f2, 8($sp)				# Load the next sidelength off the stack
-	sub.s $f2, $f0, $f2			# Subtract the sidelength from the semiperimeter and save in $f2
+	l.s $f2, 8($sp)			# Load the next sidelength off the stack
+	sub.s $f2, $f0, $f2		# $f2 = semiperimeter - side b
 	
-	l.s $f3, 12($sp)			# Load the last sidelength off the stack
-	sub.s $f3, $f0, $f3			# Subtract the sidelength from the semiperimeter and save in $f3	
+	l.s $f3, 12($sp)		# Load the last sidelength off the stack
+	sub.s $f3, $f0, $f3		# $f3 = semiperimeter - side c
 	
-	mul.s $f0, $f0, $f1			# $f0 = (semiperimiter) * (semiperimeter - side 1)
-	mul.s $f1, $f2, $f3			# $f1 = (semiperimeter - side 2) * (semiPerimeter - side 3)
+	mul.s $f0, $f0, $f1		# $f0 = (semiperimiter) * (semiperimeter - side a)
+	mul.s $f1, $f2, $f3		# $f1 = (semiperimeter - side b) * (semiPerimeter - side c)
 	
-	mul.s $f0, $f0, $f1			# $f0 = (semiperimiter) * (semiperimeter - side 1)
-								#		* (semiperimeter - side 2) * (semiPerimeter - side 3)
+	mul.s $f0, $f0, $f1		# $f0 = (semiperimiter) * (semiperimeter - side a)
+							#		* (semiperimeter - side b) * (semiPerimeter - side c)
 								
-	sqrt.s $f0, $f0				# Takes the square root of the calculated value and stores it in $f0
+	sqrt.s $f0, $f0			# $f0 = SQRT[ (semiperimiter) * (semiperimeter - side a)
+							#	  * (semiperimeter - side b) * (semiPerimeter - side c) ]
 		
-	jr $ra						# Jump back to the return address
+	jr $ra					# Jump back to the return address
 	
 .end triangleArea
