@@ -15,7 +15,7 @@ PRINT_CHAR_SERV = 11
 
         .data  
 Two:							.float 2.0
-Triangle:						.float 10.0, 10.0, 10.0
+Triangle:						.float 2.0, 3.0, 4.0
 NotTrianglePrompt:				.asciiz "Not a triangle.\n"
 TriangleAreaPrompt:				.asciiz "Triangle area: "
 
@@ -179,7 +179,7 @@ triangleArea:
 	l.s $f2, 4($sp)				# Load the next sidelength off the stack
 	sub.s $f2, $f0, $f2			# Subtract the sidelength from the semiperimeter and save in $f2
 	
-	l.s $f3, 4($sp)				# Load the last sidelength off the stack
+	l.s $f3, 8($sp)				# Load the last sidelength off the stack
 	sub.s $f3, $f0, $f3			# Subtract the sidelength from the semiperimeter and save in $f3	
 	
 	mul.s $f0, $f0, $f1			# $f0 = (semiperimiter) * (semiperimeter - side 1)
