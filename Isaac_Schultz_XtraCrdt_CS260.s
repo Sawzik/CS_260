@@ -14,6 +14,7 @@ TERMINATE_SERV  = 10
 PRINT_CHAR_SERV = 11
 
         .data  
+Zero:							.float 0.0		
 Array:							.float 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0
 AverageMessage:					.asciiz "Average: "
 ElementsMessage:				.asciiz "Array Elements:\n"
@@ -34,39 +35,6 @@ main:
 	jal ArrayPrint						# Calls the isTriangle function
 										#	$v0 is now a bool representing the triangle.
 										
-	beq $v0, 0, ReturnNotTriangle		# If the sides cannot be a triangle.
-	
-	# else
-	
-		jal triangleArea				# Calls the triangleArea function.	
-	
-		# Display traingle area message
-			la $a0, TriangleAreaPrompt
-			li $v0, PRINT_STR_SERV
-			syscall	
-		
-		# Display the floating point calculated area.
-			mov.s $f12, $f0
-			li $v0, PRINT_FLT
-			syscall
-			
-		# Display NewLine
-			la $a0, NL
-			li $v0, PRINT_CHAR_SERV
-			syscall	
-		
-		b EndProgram					# End the program
-	
-ReturnNotTriangle:
-
-	# Display not a triangle message
-		la $a0, NotTrianglePrompt
-		li $v0, PRINT_STR_SERV
-		syscall	
-	
-EndProgram:	
-	
-	addi $sp, $sp, 16					# resetting the stack
 	
 	# End program
 		li $v0, TERMINATE_SERV
@@ -77,27 +45,36 @@ EndProgram:
 
 
 
-# Function that calculates the semiperimiter of a triangle.
-# Arguments:	Length of side a					(at $sp + 0)	or	0($sp)
-#				Length of side b					(at $sp + 4)	or	4($sp)
-#				Length of side c					(at $sp + 8)	or	8($sp)
-#
-# Returns:		Semiperimiter of the triangle		in $f0
-#					returns a float representing half of the perimeter of the triangle.
-#
-# Uses  registers: $f0, $f1
-semiPerimeter:
+# Function that calculates the average of an array of floats.
+# Arguments:	$a0:	Address of the array.
+#				$a1:	Number of elements in the array.
+# Returns:		$f0:	The average of the array.
+# Uses  registers: $t0-$t2
+ArrayAverage:
+
+	li $t0, 0 			# Initialize the loop counter
+	l.s $f0, Zero		# Initialize the running average to 0
 	
-	l.s $f0, 0($sp)				# loads first 2 sidelengths from the stack
-	l.s $f1, 4($sp)
-	add.s $f0, $f0, $f1			# adds them and stors in $f0
-	l.s $f1 , 8($sp)			# Loads the last sidelength from the stack
-	add.s $f0, $f0, $f1			# Adds the last sidelength to the other two
-	l.s $f1, Two				# Loads 2 as a float into $f1
-	div.s $f0, $f0, $f1
-	jr $ra						# Jump back to the return address
+	Loop:
 	
-.end semiPerimeter
+		beq $t0, $a1, End		# End condition for the loop. When the loop counter reaches $a1.
+								# $a1 is the number of elements in the array.
+
+		l.s $f1, 0($a0)			# Loads a float from the array
+	
+		add $f0, $f0, $f1		# Increases the total the current float.
+		
+		add $a0, $a0, 4			# Increment the $a0 pointer by 1 word.
+		addi $t0, $t0, 1		# Increment the loop counter
+		b Loop 					# Branch back to Loop:
+		
+	End:
+		mtc1.s $a1, $f1			# Move the number of elements to a float register
+		cvt.w.s	$f1, $f1		# Convert the integer $a1 to a float $f1
+		div.s $f0, $f0, $f1		# Divide the total by the number of elements to get the average.
+		
+		jr $ra					# Jump back to the return address
+.end ArrayAverage
 
 
 
