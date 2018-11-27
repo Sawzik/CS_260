@@ -31,13 +31,13 @@ main:
 
 Start:
 
-	la $t0, Row0			# Loading addresses the first two rows of the array.
+	la $t0, Row0					# Loading addresses the first two rows of the array.
 	la $t1, Row1	
 
-	sub $t2, $t1, $t0		# Subtracts the address of Row1 from Row0.
-	srl $t2, $t2, 2			# Divides the difference by 4.
-							# $t2 is now the number of columns. 
-							#	This assumes all rows are the same size.
+	sub $t2, $t1, $t0				# Subtracts the address of Row1 from Row0.
+	srl $t2, $t2, 2					# Divides the difference by 4.
+									# $t2 is now the number of columns. 
+									#	This assumes all rows are the same size.
 							
 	# Prompt for input value
 		la $a0, Input_str
@@ -90,7 +90,7 @@ InvalidInput:
 		la $a0, Invalid_Column_Number
 		li $v0, PRINT_STR_SERV
 		syscall	
-	b Start			# Go back to the start of the program.
+	b Start							# Go back to the start of the program.
 	
 EndProgram:	
 	
@@ -107,9 +107,9 @@ EndProgram:
 # Uses  registers: $t0-$t1
 ColumnSum:
 
-	li $t0, 0 			# Initialize the loop counter
-	sll $a1, $a1, 2		# Multiply the number of elements in each row to get the size in bytes.
-	li $v0, 0			# Initialize the sumTotal
+	li $t0, 0 						# Initialize the loop counter
+	sll $a1, $a1, 2					# Multiply the number of elements in each row to get the size in bytes.
+	li $v0, 0						# Initialize the sumTotal
 	
 	# $t1 will be the temporary product of two elements in each array
 	
@@ -128,5 +128,5 @@ ColumnSum:
 		b Loop 					# Branch back to Loop:
 		
 	End:
-		jr $ra				# Jump back to the return address
+		jr $ra					# Jump back to the return address
 .end ColumnSum
