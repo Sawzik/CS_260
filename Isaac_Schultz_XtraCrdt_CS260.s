@@ -1,4 +1,4 @@
-# Homework 4
+# Extra Credit 1
 # Isaac Schultz
 
 # Constants
@@ -16,7 +16,7 @@ PRINT_CHAR_SERV = 11
 
         .data  
 Zero:							.float 0.0		
-Array:							.float 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0
+Array:							.float 5.4345, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0
 AverageMessage:					.asciiz "Average: "
 DataMessage:					.asciiz "Array Data: "
 ElementsMessage:				.asciiz "Array Elements:\n"
