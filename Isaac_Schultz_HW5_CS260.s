@@ -14,7 +14,7 @@ TERMINATE_SERV  = 10
 PRINT_CHAR_SERV = 11
 
         .data
-Input_str:      			.asciiz "Enter the column number: "
+Input_str:      			.asciiz "Enter the column number (Starting at 1): "
 Summary_str: 				.asciiz "Sum of elements in that column: "
 Invalid_Column_Number:		.asciiz "Invalid column number. Try again.\n"
 
@@ -50,10 +50,11 @@ Start:
 		move $t3, $v0
 	
 	bgt $t3, $t2, InvalidInput		# If user input is larger than the number of columns.
-	blt $t3, $Zero, InvalidInput	# If the user input is less than 0
-									# 	Tells the user their input is invalid.
+	blt $t3, 1, InvalidInput		# Or the user input is less than 1
+									# 	Tell the user their input is invalid.
 	# If input is valid:
 	
+	addi $t3, $t3, -1				# Subtract 1 from the user input since columns start at 0, not 1
 	sll $t3, $t3, 2					# Multiplies the column number by 4 to get its position in bytes.
 
 	# Setting up arguments for function call.
@@ -63,6 +64,25 @@ Start:
 
 	jal ColumnSum					# Calls ColumnSum.
 									#	$v0 is now the sum of the elements in that column
+	
+	move $t0, $v0					# Saves the sum of the column.
+	
+	# Write output message
+		la $a0, Summary_str
+		li $v0, PRINT_STR_SERV
+		syscall
+	
+	# Print the sum
+		move $a0, $t0
+		li $v0, PRINT_INT_SERV
+		syscall
+		
+	# Display NewLine
+		la $a0, NL
+		li $v0, PRINT_CHAR_SERV
+		syscall	
+		
+	b EndProgram					# End the program.
 	
 InvalidInput:  
 
@@ -98,7 +118,7 @@ ColumnSum:
 		beq $t0, 5, End			# End condition for the loop. When the loop counter reaches 5.
 								# 5 is the number of rows in the arrays.
 
-		lw $t2, 0($a0)			# Reads the element at the current address			
+		lw $t1, 0($a0)			# Reads the element at the current address			
 	
 		add $v0, $v0, $t1		# Increases the total by the current element.
 		
