@@ -4,7 +4,9 @@
 # Constants
 NL  = '\n'		# Newline
 TAB = '\t'		# Tab
-LISTSIZE = 10	
+SPACE = ' '		# Space
+LISTSIZE = 10
+LISTLOWESTINDEX = 0
 
 # System services
 PRINT_INT_SERV  = 1
@@ -15,13 +17,14 @@ TERMINATE_SERV  = 10
 PRINT_CHAR_SERV = 11
 
         .data
-Invalid_Number:		.asciiz "Invalid column number. Try again.\n"
+Invalid_Number:		.asciiz "Invalid number. Try again.\n"
+Full_List:			.asciiz "\nFull List:\n"
 
         .text        
 main:
 							
 	# Prompt for input value
-	la $a0, Input_str
+	la $a0, inputMsg
 	li $v0, PRINT_STR_SERV
 	syscall
 	
@@ -31,7 +34,7 @@ main:
 	move $a1, $v0
 	
 	bgt $a1, LISTSIZE, InvalidInput		# If user input is larger than the number of nodes.
-	blt $a1, 0, InvalidInput			# Or the user input is less than 0
+	blt $a1, LISTLOWESTINDEX, InvalidInput			# Or the user input is less than 0
 										# 	Tell the user their input is invalid.
 	# If input is valid:
 
@@ -47,22 +50,25 @@ main:
 	li $v0, PRINT_STR_SERV
 	syscall
 		
-	# Display NewLine
-	la $a0, NL
-	li $v0, PRINT_CHAR_SERV
-	syscall	
+	# Write output message
+	la $a0, Full_List
+	li $v0, PRINT_STR_SERV
+	syscall
+	
+	
+	la $a0, head
 		
 	jal PrintList						# Prints the whole list
 		
-	b EndProgram					# End the program.
+	b EndProgram						# End the program.
 	
 InvalidInput:  
 
 	# Display invalid message
-	la $a0, Invalid_Column_Number
+	la $a0, Invalid_Number
 	li $v0, PRINT_STR_SERV
 	syscall	
-	b main							# Go back to the start of the program.
+	b main								# Go back to the start of the program.
 	
 EndProgram:	
 
@@ -86,18 +92,22 @@ PrintList:
 	move $t0, $a0				# Saves the address of dictionary head
 	
 	Loop:
+	
+		beq $t0, 0, End			# End condition for the loop. When the current address is null.
 
 		lw $t1, 4($t0)			# Reads the address of the next node.
-		lw $t2, 8($t0)			# loads the address of the string in this node.
-		
-		beq $t1, NULL, End		# End condition for the loop. When the loop counter is larger than the list size.
+		addi $a0, $t0, 8		# Load the address of the string in this node in $a0
 		
 		# Display the string.
-		move $a0, $t0
 		li $v0, PRINT_STR_SERV
 		syscall	
 		
-		move $a0, $t0			# moves on to the next node.
+		# Display a tab
+		la $a0, SPACE
+		li $v0, PRINT_CHAR_SERV
+		syscall	
+		
+		move $t0, $t1			# moves on to the next node.
 		
 		b Loop 					# Branch back to Loop:
 		
@@ -114,7 +124,7 @@ PrintList:
 # Uses  registers: $t0-$t1
 FindNumber:
 	
-	Loop:
+	FindLoop:
 
 		lw $t0, 0($a0)			# Reads the numeral at this node.
 		lw $t1, 4($a0)			# Reads the address of the next node
@@ -123,15 +133,15 @@ FindNumber:
 		
 		move $a0, $t1			# moves on to the next node.
 		
-		beq $t0, NULL, End		# End condition for the loop. When the loop counter is larger than the list size.
+		beq $t1, 0, FindEnd		# End condition for the loop. When the loop counter is larger than the list size.
 				
-		b Loop 					# Branch back to Loop:
+		b FindLoop 				# Branch back to Loop:
 		
 	Found:
-	
-		lw $a2, 8($a0)			# Load the address of the italian word in $a2
 		
-	End:
+		addi $a2, $a0, 8		# Load the address of the italian word in $a2	
+		
+	FindEnd:
 	
 		jr $ra					# Jump back to the return address
 		
