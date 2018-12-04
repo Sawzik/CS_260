@@ -1,9 +1,10 @@
-# Homework 5
+# Homework 6
 # Isaac Schultz
 
 # Constants
 NL  = '\n'		# Newline
 TAB = '\t'		# Tab
+LISTSIZE = 10	
 
 # System services
 PRINT_INT_SERV  = 1
@@ -14,119 +15,190 @@ TERMINATE_SERV  = 10
 PRINT_CHAR_SERV = 11
 
         .data
-Input_str:      			.asciiz "Enter the column number (Starting at 1): "
-Summary_str: 				.asciiz "Sum of elements in that column: "
-Invalid_Column_Number:		.asciiz "Invalid column number. Try again.\n"
-
-		.align 2 			# Align the array on a 4-byte boundary  
-Row0:  				.word  1,	6,  8,	10,	12,	2
-Row1:  				.word 14,	2,	18,	20,	24,	3
-Row2:  				.word 30,	32,	3,	10, 5,	4
-Row3: 				.word  1,	2,	3,  4,  5,	5
-Row4:  				.word 10,	15,	20, 5,  6,	6
+Invalid_Number:		.asciiz "Invalid column number. Try again.\n"
 
         .text        
 main:
-
-	la $t0, Row0					# Loading addresses the first two rows of the array.
-	la $t1, Row1	
-
-	sub $t2, $t1, $t0				# Subtracts the address of Row1 from Row0.
-	srl $t2, $t2, 2					# Divides the difference by 4.
-									# $t2 is now the number of columns. 
-									#	This assumes all rows are the same size.
 							
 	# Prompt for input value
-		la $a0, Input_str
-		li $v0, PRINT_STR_SERV
-		syscall
+	la $a0, Input_str
+	li $v0, PRINT_STR_SERV
+	syscall
 	
 	# Moves the value the user inputted into #t3
-		li $v0, READ_INT_SERV 
-		syscall
-		move $t3, $v0
+	li $v0, READ_INT_SERV 
+	syscall
+	move $a1, $v0
 	
-	bgt $t3, $t2, InvalidInput		# If user input is larger than the number of columns.
-	blt $t3, 1, InvalidInput		# Or the user input is less than 1
-									# 	Tell the user their input is invalid.
+	bgt $a1, LISTSIZE, InvalidInput		# If user input is larger than the number of nodes.
+	blt $a1, 0, InvalidInput			# Or the user input is less than 0
+										# 	Tell the user their input is invalid.
 	# If input is valid:
-	
-	addi $t3, $t3, -1				# Subtract 1 from the user input since columns start at 0, not 1
-	sll $t3, $t3, 2					# Multiplies the column number by 4 to get its position in bytes.
 
 	# Setting up arguments for function call.
-	
-	add $a0, $t0, $t3				# Adds the column position to the address of row0.
-									#	Saves the result as one of the arguments for ColumnSum function.
-	move $a1, $t2					# Saving row size for ColumnSum function.
 
-	jal ColumnSum					# Calls ColumnSum.
-									#	$v0 is now the sum of the elements in that column
+	la $a0, head
 	
-	move $t0, $v0					# Saves the sum of the column.
+	jal FindNumber						# Runs FindNumber function
+										# $a2 is now to address of the string in the node we searched
 	
 	# Write output message
-		la $a0, Summary_str
-		li $v0, PRINT_STR_SERV
-		syscall
-	
-	# Print the sum
-		move $a0, $t0
-		li $v0, PRINT_INT_SERV
-		syscall
+	move $a0, $a2
+	li $v0, PRINT_STR_SERV
+	syscall
 		
 	# Display NewLine
-		la $a0, NL
-		li $v0, PRINT_CHAR_SERV
-		syscall	
+	la $a0, NL
+	li $v0, PRINT_CHAR_SERV
+	syscall	
+		
+	jal PrintList						# Prints the whole list
 		
 	b EndProgram					# End the program.
 	
 InvalidInput:  
 
 	# Display invalid message
-		la $a0, Invalid_Column_Number
-		li $v0, PRINT_STR_SERV
-		syscall	
+	la $a0, Invalid_Column_Number
+	li $v0, PRINT_STR_SERV
+	syscall	
 	b main							# Go back to the start of the program.
 	
 EndProgram:	
+
+	# Display NewLine
+	la $a0, NL
+	li $v0, PRINT_CHAR_SERV
+	syscall	
 	
 	# End program
-		li $v0, TERMINATE_SERV
-		syscall
+	li $v0, TERMINATE_SERV
+	syscall
 		
 .end main
 
-# Function that calculates the sum of all the elements in a 2 dimensional array with 5 rows
-# Arguments:	$a0:	Address of the first element
-#				$a1:	Number of elements in each row
-# Returns:		$v0:	The sum of the elements in the given column
+# Function that Prints the entire contents of a linkedList
+# Arguments:	$a0:	Address of dictionary head.
+# Returns:		N/A
 # Uses  registers: $t0-$t1
-ColumnSum:
-
-	li $t0, 0 					# Initialize the loop counter
-	sll $a1, $a1, 2				# Multiply the number of elements in each row to get the size in bytes.
-	li $v0, 0					# Initialize the sumTotal
+PrintList:
 	
-	# $t1 will be the temporary product of two elements in each array
+	move $t0, $a0				# Saves the address of dictionary head
 	
 	Loop:
-	
-		beq $t0, 5, End			# End condition for the loop. When the loop counter reaches 5.
-								# 5 is the number of rows in the arrays.
 
-		lw $t1, 0($a0)			# Reads the element at the current address			
-	
-		add $v0, $v0, $t1		# Increases the total by the current element.
+		lw $t1, 4($t0)			# Reads the address of the next node.
+		lw $t2, 8($t0)			# loads the address of the string in this node.
 		
-		add $a0, $a0, $a1		# Increment the $a0 pointer by 1 row.		
-				
-		addi $t0, $t0, 1		# Increment the loop counter
+		beq $t1, NULL, End		# End condition for the loop. When the loop counter is larger than the list size.
+		
+		# Display the string.
+		move $a0, $t0
+		li $v0, PRINT_STR_SERV
+		syscall	
+		
+		move $a0, $t0			# moves on to the next node.
+		
 		b Loop 					# Branch back to Loop:
 		
 	End:
 	
 		jr $ra					# Jump back to the return address
 		
-.end ColumnSum
+.end PrintList
+
+# Function that Searches through the linked list for a numeral value.
+# Arguments:	$a0:	Address of dictionary head.
+#				$a1:	integer value to search through the list for.
+# Returns:		$a2:	The address of the italian word.
+# Uses  registers: $t0-$t1
+FindNumber:
+	
+	Loop:
+
+		lw $t0, 0($a0)			# Reads the numeral at this node.
+		lw $t1, 4($a0)			# Reads the address of the next node
+		
+		beq $t0, $a1, Found		# When it hits the value that is being searched for.
+		
+		move $a0, $t1			# moves on to the next node.
+		
+		beq $t0, NULL, End		# End condition for the loop. When the loop counter is larger than the list size.
+				
+		b Loop 					# Branch back to Loop:
+		
+	Found:
+	
+		lw $a2, 8($a0)			# Load the address of the italian word in $a2
+		
+	End:
+	
+		jr $ra					# Jump back to the return address
+		
+.end FindNumber
+
+
+
+        .data
+inputMsg:			.asciiz "Enter a number in the range of 0 through 10..."
+endMsg: 			.asciiz "Done!\n"
+
+	.align 2		# Align what follows in a 4-byte boundary
+
+head:
+node0:	.word 0
+		.word node1
+		.asciiz "zero"
+
+node1:  .word 1
+        .word node2
+		.asciiz "uno"
+
+
+node2:  .word 2
+        .word node3
+		.asciiz "due"
+         
+
+node3:  .word 3
+        .word node4
+		.asciiz "tre"
+         
+
+node4:  .word 4
+		.word node5
+		.asciiz "quattro"
+         
+
+node5:  .word 5
+        .word node6
+		.asciiz "cinque"
+         
+
+node6:  .word 6
+        .word node7
+		.asciiz "sei"
+         
+
+node7:  .word 7
+        .word node8
+		.asciiz "sette"
+         
+
+node8:  .word 8
+        .word node9
+		.asciiz "otto"
+         
+
+node9:  .word 9
+        .word node10
+		.asciiz "nove"
+         
+
+node10: .word 10
+		.word nodeEND
+		.asciiz "dieci"
+
+nodeEND:	.word -1
+			.word NULL
+			.asciiz "Fine"
